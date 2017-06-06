@@ -8,7 +8,12 @@
 package roadgraph;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -24,7 +29,10 @@ import util.GraphLoader;
  */
 public class MapGraph {
 	//TODO: Add your member variables here in WEEK 3
+	private int numEdges;
 	
+	private ArrayList<GeographicPoint> vertices;
+	private HashMap<Integer, ArrayList<MapEdge>> adjListMap;
 	
 	/** 
 	 * Create a new empty MapGraph 
@@ -32,6 +40,9 @@ public class MapGraph {
 	public MapGraph()
 	{
 		// TODO: Implement in this constructor in WEEK 3
+		numEdges = 0;
+		vertices = new ArrayList<GeographicPoint>();
+		adjListMap = new HashMap<Integer, ArrayList<MapEdge>>();
 	}
 	
 	/**
@@ -41,7 +52,7 @@ public class MapGraph {
 	public int getNumVertices()
 	{
 		//TODO: Implement this method in WEEK 3
-		return 0;
+		return vertices.size();
 	}
 	
 	/**
@@ -51,7 +62,8 @@ public class MapGraph {
 	public Set<GeographicPoint> getVertices()
 	{
 		//TODO: Implement this method in WEEK 3
-		return null;
+		
+		return new HashSet<GeographicPoint>(vertices);
 	}
 	
 	/**
@@ -61,7 +73,7 @@ public class MapGraph {
 	public int getNumEdges()
 	{
 		//TODO: Implement this method in WEEK 3
-		return 0;
+		return numEdges;
 	}
 
 	
@@ -76,7 +88,13 @@ public class MapGraph {
 	public boolean addVertex(GeographicPoint location)
 	{
 		// TODO: Implement this method in WEEK 3
-		return false;
+		if(getNodeIndex(location) == -1)
+			return false;
+		
+		vertices.add(location);
+		adjListMap.put(vertices.size() - 1, new ArrayList<MapEdge>());
+		
+		return true;
 	}
 	
 	/**
@@ -95,6 +113,57 @@ public class MapGraph {
 			String roadType, double length) throws IllegalArgumentException {
 
 		//TODO: Implement this method in WEEK 3
+		int startNode = -1;
+		int endNode = -1;
+		MapEdge newEdge;
+		
+		if(length < 0)
+		{
+			throw new IllegalArgumentException();
+		}
+		
+		if(from == null || to == null || roadName == null || roadType == null)
+		{
+			throw new IllegalArgumentException();
+		}
+		
+		for(GeographicPoint p: vertices)
+		{
+			if(p.equals(from))
+				startNode = vertices.indexOf(p);
+		}
+		
+		if(startNode == -1)
+			throw new IllegalArgumentException();
+		
+		for(GeographicPoint p: vertices)
+		{
+			if(p.equals(to))
+				endNode = vertices.indexOf(p);
+		}
+		
+		if(endNode == -1)
+			throw new IllegalArgumentException();
+		
+		newEdge = new MapEdge(roadName,roadType,length,endNode);
+
+		adjListMap.get(startNode).add(newEdge);
+		numEdges ++;
+	}
+	
+	public void printGraph()
+	{
+		for(GeographicPoint v : vertices)
+		{
+			int index = vertices.indexOf(v);
+			System.out.print("vertice" + index + ": (" + v.x  + "," + v.y + ")-->[");
+			for(MapEdge me : adjListMap.get(index))
+			{
+				System.out.print("(" + vertices.get(me.getEndNode()) + ")" + me + ",");
+			}
+			
+			System.out.print("]\n");
+		}
 		
 	}
 	
@@ -127,8 +196,45 @@ public class MapGraph {
 		
 		// Hook for visualization.  See writeup.
 		//nodeSearched.accept(next.getLocation());
+		
+		LinkedList<Integer> queue = new LinkedList<Integer>();
+		HashSet<Integer> visited = new HashSet<Integer> ();
+		HashMap<Integer,Integer> searchPath = new HashMap<Integer,Integer>();
+		
+		int indexStart  = getNodeIndex(start);
+		int indexEnd  = getNodeIndex(goal);
+		
+		if(indexStart == -1 || indexEnd == -1)
+		{
+			throw new IllegalArgumentException();
+		}
+		else
+		{
+			queue.addLast(indexStart);
+			visited.add(getNodeIndex(start));
+			
+			return getResultPath(searchPath, indexStart,indexEnd);
+		}
 
-		return null;
+	}
+	
+	private List<GeographicPoint> getResultPath(HashMap<Integer,Integer> searchPath, int start,int goal)
+	{
+		List<GeographicPoint> retList = new ArrayList<GeographicPoint>();
+		
+		return retList;
+	}
+	
+	private int getNodeIndex(GeographicPoint node)
+	{
+		
+		for(GeographicPoint n:vertices)
+		{
+			if(n.equals(node))
+				return vertices.indexOf(n);
+		}
+		
+		return -1;
 	}
 	
 
@@ -207,6 +313,8 @@ public class MapGraph {
 		GraphLoader.loadRoadMap("data/testdata/simpletest.map", firstMap);
 		System.out.println("DONE.");
 		
+		firstMap.printGraph();
+		
 		// You can use this method for testing.  
 		
 		
@@ -214,36 +322,36 @@ public class MapGraph {
 		 * the Week 3 End of Week Quiz, EVEN IF you score 100% on the 
 		 * programming assignment.
 		 */
-		/*
-		MapGraph simpleTestMap = new MapGraph();
-		GraphLoader.loadRoadMap("data/testdata/simpletest.map", simpleTestMap);
 		
-		GeographicPoint testStart = new GeographicPoint(1.0, 1.0);
-		GeographicPoint testEnd = new GeographicPoint(8.0, -1.0);
+//		MapGraph simpleTestMap = new MapGraph();
+//		GraphLoader.loadRoadMap("data/testdata/simpletest.map", simpleTestMap);
+//		
+//		GeographicPoint testStart = new GeographicPoint(1.0, 1.0);
+//		GeographicPoint testEnd = new GeographicPoint(8.0, -1.0);
+//		
+//		System.out.println("Test 1 using simpletest: Dijkstra should be 9 and AStar should be 5");
+//		List<GeographicPoint> testroute = simpleTestMap.dijkstra(testStart,testEnd);
+//		List<GeographicPoint> testroute2 = simpleTestMap.aStarSearch(testStart,testEnd);
+//		
+//		
+//		MapGraph testMap = new MapGraph();
+//		GraphLoader.loadRoadMap("data/maps/utc.map", testMap);
+//		
+//		// A very simple test using real data
+//		testStart = new GeographicPoint(32.869423, -117.220917);
+//		testEnd = new GeographicPoint(32.869255, -117.216927);
+//		System.out.println("Test 2 using utc: Dijkstra should be 13 and AStar should be 5");
+//		testroute = testMap.dijkstra(testStart,testEnd);
+//		testroute2 = testMap.aStarSearch(testStart,testEnd);
+//		
+//		
+//		// A slightly more complex test using real data
+//		testStart = new GeographicPoint(32.8674388, -117.2190213);
+//		testEnd = new GeographicPoint(32.8697828, -117.2244506);
+//		System.out.println("Test 3 using utc: Dijkstra should be 37 and AStar should be 10");
+//		testroute = testMap.dijkstra(testStart,testEnd);
+//		testroute2 = testMap.aStarSearch(testStart,testEnd);
 		
-		System.out.println("Test 1 using simpletest: Dijkstra should be 9 and AStar should be 5");
-		List<GeographicPoint> testroute = simpleTestMap.dijkstra(testStart,testEnd);
-		List<GeographicPoint> testroute2 = simpleTestMap.aStarSearch(testStart,testEnd);
-		
-		
-		MapGraph testMap = new MapGraph();
-		GraphLoader.loadRoadMap("data/maps/utc.map", testMap);
-		
-		// A very simple test using real data
-		testStart = new GeographicPoint(32.869423, -117.220917);
-		testEnd = new GeographicPoint(32.869255, -117.216927);
-		System.out.println("Test 2 using utc: Dijkstra should be 13 and AStar should be 5");
-		testroute = testMap.dijkstra(testStart,testEnd);
-		testroute2 = testMap.aStarSearch(testStart,testEnd);
-		
-		
-		// A slightly more complex test using real data
-		testStart = new GeographicPoint(32.8674388, -117.2190213);
-		testEnd = new GeographicPoint(32.8697828, -117.2244506);
-		System.out.println("Test 3 using utc: Dijkstra should be 37 and AStar should be 10");
-		testroute = testMap.dijkstra(testStart,testEnd);
-		testroute2 = testMap.aStarSearch(testStart,testEnd);
-		*/
 		
 		
 		/* Use this code in Week 3 End of Week Quiz */
