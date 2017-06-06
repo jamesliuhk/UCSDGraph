@@ -31,13 +31,16 @@ public class MapGraph {
 	//TODO: Add your member variables here in WEEK 3
 	private int numEdges;
 	
-	private ArrayList<GeographicPoint> vertices;
-	private HashMap<Integer, ArrayList<MapEdge>> adjListMap;
+	
+	private ArrayList<GeographicPoint> vertices; //use index of arrayList to mapping GeographicPoint to integer,
+												 //use the integer as vertices presentation 
+	
+	private HashMap<Integer, ArrayList<MapEdge>> adjListMap; //mapping vertices to the edges, MapEdge contains endNode information
 	
 	/** 
 	 * Create a new empty MapGraph 
 	 */
-	public MapGraph()
+	public MapGraph() //initialize a empty map graph
 	{
 		// TODO: Implement in this constructor in WEEK 3
 		numEdges = 0;
@@ -52,7 +55,7 @@ public class MapGraph {
 	public int getNumVertices()
 	{
 		//TODO: Implement this method in WEEK 3
-		return vertices.size();
+		return vertices.size(); // all vertices stores in ArrayList "vertices"
 	}
 	
 	/**
@@ -63,7 +66,7 @@ public class MapGraph {
 	{
 		//TODO: Implement this method in WEEK 3
 		
-		return new HashSet<GeographicPoint>(vertices);
+		return new HashSet<GeographicPoint>(vertices); // all vertices stores in ArrayList "vertices"
 	}
 	
 	/**
@@ -88,11 +91,12 @@ public class MapGraph {
 	public boolean addVertex(GeographicPoint location)
 	{
 		// TODO: Implement this method in WEEK 3
-		if(getNodeIndex(location) == -1)
+		if(getNodeIndex(location) != -1) //if the vertices is already exist
 			return false;
 		
 		vertices.add(location);
-		adjListMap.put(vertices.size() - 1, new ArrayList<MapEdge>());
+		adjListMap.put(vertices.size() - 1, new ArrayList<MapEdge>()); //add new vertices to adjacency list, use integer present vertices
+																	   //and mapping it to MapEdge
 		
 		return true;
 	}
@@ -117,6 +121,7 @@ public class MapGraph {
 		int endNode = -1;
 		MapEdge newEdge;
 		
+		//parameter validation check
 		if(length < 0)
 		{
 			throw new IllegalArgumentException();
@@ -127,32 +132,30 @@ public class MapGraph {
 			throw new IllegalArgumentException();
 		}
 		
-		for(GeographicPoint p: vertices)
-		{
-			if(p.equals(from))
-				startNode = vertices.indexOf(p);
-		}
+		//
 		
+		//convert GeographicPoint to integer presentation
+		startNode = getNodeIndex(from);
+		endNode = getNodeIndex(to);
+		
+		//check if the node exist
 		if(startNode == -1)
 			throw new IllegalArgumentException();
-		
-		for(GeographicPoint p: vertices)
-		{
-			if(p.equals(to))
-				endNode = vertices.indexOf(p);
-		}
 		
 		if(endNode == -1)
 			throw new IllegalArgumentException();
 		
+		//create new map edge use given information
 		newEdge = new MapEdge(roadName,roadType,length,endNode);
 
+		//add new edge to the adjacency list with corresponding start node
 		adjListMap.get(startNode).add(newEdge);
 		numEdges ++;
 	}
 	
 	public void printGraph()
 	{
+		//for debug, print the graph
 		for(GeographicPoint v : vertices)
 		{
 			int index = vertices.indexOf(v);
@@ -197,13 +200,14 @@ public class MapGraph {
 		// Hook for visualization.  See writeup.
 		//nodeSearched.accept(next.getLocation());
 		
-		LinkedList<Integer> queue = new LinkedList<Integer>();
-		HashSet<Integer> visited = new HashSet<Integer> ();
-		HashMap<Integer,Integer> searchPath = new HashMap<Integer,Integer>();
+		LinkedList<Integer> queue = new LinkedList<Integer>(); //use for bfs
+		HashSet<Integer> visited = new HashSet<Integer> (); // record visited vertices
+		HashMap<Integer,Integer> searchPath = new HashMap<Integer,Integer>(); //record search path
 		
-		int indexStart  = getNodeIndex(start);
+		int indexStart  = getNodeIndex(start); 
 		int indexEnd  = getNodeIndex(goal);
 		
+		//check if start and goal point exist
 		if(indexStart == -1 || indexEnd == -1)
 		{
 			throw new IllegalArgumentException();
@@ -211,20 +215,58 @@ public class MapGraph {
 		else
 		{
 			queue.addLast(indexStart);
-			visited.add(getNodeIndex(start));
-			
-			return getResultPath(searchPath, indexStart,indexEnd);
+			visited.add(indexStart);
+			int currentNode;
+			while(!queue.isEmpty())
+			{
+				currentNode = queue.removeFirst();
+				if(currentNode == indexEnd)
+				{
+					return getResultPath(searchPath, indexStart,currentNode);
+				}
+				
+				//get all linked edge form adjListMap
+				for(MapEdge me: adjListMap.get(currentNode))
+				{
+					queue.addLast(me.getEndNode());
+					visited.add(me.getEndNode());
+					searchPath.put(me.endNode, currentNode); //insert current node's child into search path
+															//and set theirs parent to current node
+				}
+			}
+			return null;
 		}
 
 	}
 	
+	/**
+	 * convert integer node presentation into GeographicPoint list
+	 * @param searchPath:record of search path, format: <node,parent>
+	 * @param start: start point
+	 * @param goal: goal point
+	 * @return Path from start GeographicPoint to goal GeographicPoint
+	 */
 	private List<GeographicPoint> getResultPath(HashMap<Integer,Integer> searchPath, int start,int goal)
 	{
-		List<GeographicPoint> retList = new ArrayList<GeographicPoint>();
+		LinkedList<GeographicPoint> retList = new LinkedList<GeographicPoint>();
+		int currentNode = goal;
 		
-		return retList;
+		while(true)
+		{
+			retList.addFirst(vertices.get(currentNode));
+			if(currentNode == start)
+			{
+				return retList;
+			}
+			currentNode = searchPath.get(currentNode);
+		}
 	}
 	
+	/**
+	 * convert GeographicPoint to integer presentation
+	 * @param node
+	 * @return index of node in ArrayList vertices
+	 */
 	private int getNodeIndex(GeographicPoint node)
 	{
 		
@@ -234,6 +276,7 @@ public class MapGraph {
 				return vertices.indexOf(n);
 		}
 		
+		//if the node dose not exist
 		return -1;
 	}
 	

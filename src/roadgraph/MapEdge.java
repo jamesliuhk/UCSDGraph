@@ -1,7 +1,7 @@
 package roadgraph;
 
 public class MapEdge {
-	
+	//present edge in the map
 	private String name;
 	String type;
 	double len;
@@ -16,16 +16,6 @@ public class MapEdge {
 		endNode = toNode;
 	}
 	
-	public String getName()
-	{
-		return name;
-	}
-	
-	public String getType()
-	{
-		return type;
-	}
-	
 	public double getLength()
 	{
 		return len;
@@ -36,7 +26,7 @@ public class MapEdge {
 		return endNode;
 	}
 	
-	public String toString()
+	public String toString() //for debug use
 	{
 		return "<" + name + "," + type + "," + len + ">";
 	}
