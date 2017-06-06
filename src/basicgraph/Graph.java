@@ -3,6 +3,7 @@ package basicgraph;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +28,6 @@ public abstract class Graph {
 	private int numEdges;
 	//optional association of String labels to vertices 
 	private Map<Integer,String> vertexLabels;
-	
 	/**
 	 * Create a new empty Graph
 	 */
@@ -122,7 +122,36 @@ public abstract class Graph {
 	 */
 	public List<Integer> degreeSequence() {
 		// XXX: Implement in part 1 of week 2
-		return null;
+		
+		List<Integer> retList = new LinkedList<Integer>();
+		
+		for(int i=0;i<numVertices;i++)
+		{
+			insertInOrder(retList,getNeighbors(i).size() + getInNeighbors(i).size());
+		}
+		
+		return retList;
+	}
+	
+	private boolean insertInOrder(List<Integer> list,int value)
+	{
+		if(list.isEmpty())
+		{
+			list.add(value);
+			return true;
+		}
+
+		for(int i=0;i<list.size();i++)
+		{
+			if(list.get(i) <= value)
+			{
+				list.add(i,value);
+				return true;
+			}
+		}
+		
+		list.add(value);
+		return true;
 	}
 	
 	/**
@@ -243,6 +272,12 @@ public abstract class Graph {
 		GraphAdjList graphFromFile = new GraphAdjList();
 		GraphLoader.loadRoadMap("data/testdata/simpletest.map", graphFromFile);
 		System.out.println(graphFromFile);
+		System.out.println("###degree sequence: " + graphFromFile.degreeSequence());
+		GraphLoader.loadRoadMap("data/maps/ucsd.map", graphFromFile);
+		System.out.println(graphFromFile);
+		System.out.println("###degree sequence: " + graphFromFile.degreeSequence());
+		
+		
 		
 		System.out.println("Observe all degrees are <= 12.");
 		System.out.println("****");
