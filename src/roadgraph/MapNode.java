@@ -24,6 +24,8 @@ class MapNode implements Comparable<MapNode>
 	
 	/**the priority use for dijkstra and A* search*/
 	private Double distance;
+	
+	private Double predictToGoal;
 	/** 
 	 * Create a new MapNode at a given Geographic location
 	 * @param loc the location of this node
@@ -33,6 +35,7 @@ class MapNode implements Comparable<MapNode>
 		location = loc;
 		edges = new HashSet<MapEdge>();
 		distance = Double.MAX_VALUE; //set default value to infinite
+		predictToGoal = 0.0; //for dijkstra default is 0
 	}
 		
 	/**
@@ -83,6 +86,16 @@ class MapNode implements Comparable<MapNode>
 	void setDistance(Double value)
 	{
 		distance = value;
+	}
+	
+	Double getPredictDistance()
+	{
+		return new Double(predictToGoal);
+	}
+	
+	void setPredictDistance(Double value)
+	{
+		predictToGoal = value;
 	}
 	
 	/** Returns whether two nodes are equal.
@@ -141,7 +154,12 @@ class MapNode implements Comparable<MapNode>
 	@Override
 	public int compareTo(MapNode otherNode) {
 		// TODO Auto-generated method stub
-		return (int)(distance - otherNode.getDistance());
+		if(distance + predictToGoal - otherNode.getDistance() - otherNode.getPredictDistance() <0)
+			return -1;
+		else if(distance + predictToGoal - otherNode.getDistance() - otherNode.getPredictDistance() > 0)
+			return 1;
+		else
+			return 0;
 	}
 
 }
