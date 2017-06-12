@@ -297,7 +297,7 @@ public class MapGraph {
 					return null;
 				}
 				
-				//initalize all node
+				//Initialize all node
 				for(MapNode n : pointNodeMap.values())
 				{
 					n.setDistance(Double.MAX_VALUE);
@@ -311,8 +311,12 @@ public class MapGraph {
 				toExplore.add(startNode);
 				MapNode next = null;
 
+				int nodeCount = 0;
 				while (!toExplore.isEmpty()) {
 					next = toExplore.remove();
+					
+					System.out.println("DIJKSTRA visiting" + next);
+					nodeCount ++;
 					
 					 // hook for visualization
 					nodeSearched.accept(next.getLocation());
@@ -332,6 +336,9 @@ public class MapGraph {
 							}
 					}
 				}
+				
+				System.out.println("Nodes visited in search:" + nodeCount);
+				
 				if (!next.equals(endNode)) {
 					System.out.println("No path found from " +start+ " to " + goal);
 					return null;
@@ -373,7 +380,69 @@ public class MapGraph {
 		// Hook for visualization.  See writeup.
 		//nodeSearched.accept(next.getLocation());
 		
-		return null;
+		// Setup - check validity of inputs
+		if (start == null || goal == null)
+			throw new NullPointerException("Cannot find route from or to null node");
+		MapNode startNode = pointNodeMap.get(start);
+		MapNode endNode = pointNodeMap.get(goal);
+		if (startNode == null) {
+			System.err.println("Start node " + start + " does not exist");
+			return null;
+		}
+		if (endNode == null) {
+			System.err.println("End node " + goal + " does not exist");
+			return null;
+		}
+		
+		//Initialize all node
+		for(MapNode n : pointNodeMap.values())
+		{
+			n.setDistance(Double.MAX_VALUE);
+		}
+
+		// setup to begin BFS
+		HashMap<MapNode,MapNode> parentMap = new HashMap<MapNode,MapNode>();
+		Queue<MapNode> toExplore = new PriorityQueue<MapNode>();
+		HashSet<MapNode> visited = new HashSet<MapNode>();
+		startNode.setDistance(0.0);
+		toExplore.add(startNode);
+		MapNode next = null;
+
+		int nodeCount = 0;
+		while (!toExplore.isEmpty()) {
+			next = toExplore.remove();
+			
+			System.out.println("A* visiting" + next);
+			nodeCount ++;
+			 // hook for visualization
+			nodeSearched.accept(next.getLocation());
+			
+			if(!visited.contains(next))
+				visited.add(next);
+			
+			if (next.equals(endNode)) break;
+			Set<MapNode> neighbors = getNeighbors(next);
+			for (MapNode neighbor : neighbors) {
+					double currentDistance  = next.getDistance() + edgeLength(next,neighbor) +  neighbor.getLocation().distance(goal);
+					if(currentDistance < neighbor.getDistance())
+					{
+						neighbor.setDistance(currentDistance);
+						parentMap.put(neighbor, next);
+						toExplore.add(neighbor);
+					}
+			}
+		}
+		
+		System.out.println("Nodes visited in search:" + nodeCount);
+		if (!next.equals(endNode)) {
+			System.out.println("No path found from " +start+ " to " + goal);
+			return null;
+		}
+		// Reconstruct the parent path
+		List<GeographicPoint> path =
+				reconstructPath(parentMap, startNode, endNode);
+
+		return path;
 	}
 
 	
@@ -402,6 +471,35 @@ public class MapGraph {
 		List<GeographicPoint> route2 = theMap.aStarSearch(start,end);
 
 		*/
+		
+		MapGraph simpleTestMap = new MapGraph();
+		GraphLoader.loadRoadMap("data/testdata/simpletest.map", simpleTestMap);
+		
+		GeographicPoint testStart = new GeographicPoint(1.0, 1.0);
+		GeographicPoint testEnd = new GeographicPoint(8.0, -1.0);
+		
+		System.out.println("Test 1 using simpletest: Dijkstra should be 9 and AStar should be 5");
+		List<GeographicPoint> testroute = simpleTestMap.dijkstra(testStart,testEnd);
+		List<GeographicPoint> testroute2 = simpleTestMap.aStarSearch(testStart,testEnd);
+		
+		
+		MapGraph testMap = new MapGraph();
+		GraphLoader.loadRoadMap("data/maps/utc.map", testMap);
+		
+		// A very simple test using real data
+		testStart = new GeographicPoint(32.869423, -117.220917);
+		testEnd = new GeographicPoint(32.869255, -117.216927);
+		System.out.println("Test 2 using utc: Dijkstra should be 13 and AStar should be 5");
+		testroute = testMap.dijkstra(testStart,testEnd);
+		testroute2 = testMap.aStarSearch(testStart,testEnd);
+		
+		
+		// A slightly more complex test using real data
+		testStart = new GeographicPoint(32.8674388, -117.2190213);
+		testEnd = new GeographicPoint(32.8697828, -117.2244506);
+		System.out.println("Test 3 using utc: Dijkstra should be 37 and AStar should be 10");
+		testroute = testMap.dijkstra(testStart,testEnd);
+		testroute2 = testMap.aStarSearch(testStart,testEnd);
 		
 	}
 	
